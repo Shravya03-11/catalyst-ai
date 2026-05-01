@@ -478,7 +478,76 @@ elif page == "3D Reaction Studio":
 
 elif page == "Ranking":
     st.title("📊 Ranking & Comparison")
-    st.write("Graphs and ranking will appear here")
+
+    if "reaction" not in st.session_state:
+        st.warning("Please go to Discovery page first and generate a reaction.")
+    else:
+        st.success(f"Ranking candidates for: {st.session_state['reaction']}")
+
+        import pandas as pd
+        import random
+
+        known = pd.DataFrame({
+            "Candidate": ["Cu", "Zn", "Cu-Zn", "Ni"],
+            "Type": ["Known Catalyst", "Known Catalyst", "Known Catalyst", "Known Catalyst"],
+            "Activity": [75, 70, 85, 65],
+            "Selectivity": [78, 72, 88, 70],
+            "Stability": [80, 78, 82, 75],
+            "Cost Score": [85, 90, 80, 88]
+        })
+
+        generated = pd.DataFrame({
+            "Candidate": [
+                "Cu-Zn-Al Nano Catalyst",
+                "Ni-Cu Hybrid Structure",
+                "Fe-based Advanced Catalyst"
+            ],
+            "Type": ["AI Generated", "AI Generated", "AI Generated"],
+            "Activity": [random.randint(78, 95) for _ in range(3)],
+            "Selectivity": [random.randint(75, 92) for _ in range(3)],
+            "Stability": [random.randint(72, 90) for _ in range(3)],
+            "Cost Score": [random.randint(70, 90) for _ in range(3)]
+        })
+
+        ranking_df = pd.concat([known, generated], ignore_index=True)
+
+        ranking_df["Final Score"] = (
+            ranking_df["Activity"] * 0.35 +
+            ranking_df["Selectivity"] * 0.30 +
+            ranking_df["Stability"] * 0.25 +
+            ranking_df["Cost Score"] * 0.10
+        )
+
+        ranking_df = ranking_df.sort_values(by="Final Score", ascending=False)
+
+        st.subheader("🏆 Final Ranked Candidates")
+        st.dataframe(ranking_df, use_container_width=True)
+
+        st.subheader("📈 Candidate Score Comparison")
+
+        fig = px.bar(
+            ranking_df,
+            x="Candidate",
+            y="Final Score",
+            color="Type",
+            title="Final Candidate Ranking Score"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.subheader("🎯 Best Candidate Recommendation")
+
+        best = ranking_df.iloc[0]
+
+        st.success(
+            f"Recommended Candidate: {best['Candidate']} "
+            f"with score {best['Final Score']:.2f}"
+        )
+
+        st.write(
+            "This candidate is recommended based on a weighted combination of "
+            "activity, selectivity, stability, and cost score."
+        )
 
 
 elif page == "Feedback Loop":
